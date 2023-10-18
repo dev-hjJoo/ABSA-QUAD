@@ -90,7 +90,7 @@ if __name__ == '__main__':
         """
         def __init__(self, hparams, tfm_model, tokenizer):
             super(T5FineTuner, self).__init__()
-            self.hparams = hparams
+            self.save_hyperparameters(hparams)
             self.model = tfm_model
             self.tokenizer = tokenizer
 
