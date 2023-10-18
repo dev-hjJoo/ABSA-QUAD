@@ -24,7 +24,7 @@ aspect_cate_list = ['location general',
                     'food style_options']
 
 
-def read_line_examples_from_file(data_path, silence):
+def read_line_examples_from_file(data_path, silence=True):
     """
     Read data from file, each line is: sent####labels
     Return List[List[word]], List[Tuple]
