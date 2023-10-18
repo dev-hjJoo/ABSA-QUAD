@@ -16,6 +16,8 @@ from transformers import AdamW, T5ForConditionalGeneration, T5Tokenizer
 # from transformers import BertTokenizer, EncoderDecoderModel
 from transformers import get_linear_schedule_with_warmup
 
+from multiprocessing import freeze_support
+
 from data_utils import ABSADataset
 from data_utils import read_line_examples_from_file
 from eval_utils import compute_scores
