@@ -161,11 +161,8 @@ if __name__ == '__main__':
             self.opt = optimizer
             return [optimizer]
 
-        def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_idx, second_order_closure=None):
-            if self.trainer.use_tpu:
-                xm.optimizer_step(optimizer)
-            else:
-                optimizer.step()
+        def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_closure, second_order_closure=None):
+            optimizer.step(closure=optimizer_closure)
             optimizer.zero_grad()
             self.lr_scheduler.step()
 
