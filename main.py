@@ -94,6 +94,7 @@ if __name__ == '__main__':
             self.model = tfm_model
             self.tokenizer = tokenizer
             self.validation_step_outputs = []
+            self.train_step_outputs = []
 
         def is_logger(self):
             return True
@@ -125,11 +126,12 @@ if __name__ == '__main__':
         def training_step(self, batch, batch_idx):
             loss = self._step(batch)
 
+            self.train_step_outputs.append(loss)
             tensorboard_logs = {"train_loss": loss}
             return {"loss": loss, "log": tensorboard_logs}
 
-        def on_train_epoch_end(self, outputs):
-            avg_train_loss = torch.stack([x["loss"] for x in outputs]).mean()
+        def on_train_epoch_end(self):
+            avg_train_loss = torch.stack(self.train_step_outputs).mean()
             tensorboard_logs = {"avg_train_loss": avg_train_loss}
             return {"avg_train_loss": avg_train_loss, "log": tensorboard_logs, 'progress_bar': tensorboard_logs}
 
