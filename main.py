@@ -93,6 +93,7 @@ if __name__ == '__main__':
             self.save_hyperparameters(hparams)
             self.model = tfm_model
             self.tokenizer = tokenizer
+            self.validation_step_outputs = []
 
         def is_logger(self):
             return True
@@ -127,17 +128,18 @@ if __name__ == '__main__':
             tensorboard_logs = {"train_loss": loss}
             return {"loss": loss, "log": tensorboard_logs}
 
-        def training_epoch_end(self, outputs):
+        def on_train_epoch_end(self, outputs):
             avg_train_loss = torch.stack([x["loss"] for x in outputs]).mean()
             tensorboard_logs = {"avg_train_loss": avg_train_loss}
             return {"avg_train_loss": avg_train_loss, "log": tensorboard_logs, 'progress_bar': tensorboard_logs}
 
         def validation_step(self, batch, batch_idx):
             loss = self._step(batch)
-            return {"val_loss": loss}
+            self.validation_step_outputs.append(loss)
+            return loss
 
-        def validation_epoch_end(self, outputs):
-            avg_loss = torch.stack([x["val_loss"] for x in outputs]).mean()
+        def on_validation_epoch_end(self):
+            avg_loss = torch.stack(self.validation_step_outputs).mean()
             tensorboard_logs = {"val_loss": avg_loss}
             return {"avg_val_loss": avg_loss, "log": tensorboard_logs, 'progress_bar': tensorboard_logs}
 
