@@ -8,6 +8,7 @@ import pickle
 from tqdm import tqdm
 
 import torch
+import pandas as pd
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning import seed_everything
@@ -132,6 +133,7 @@ if __name__ == '__main__':
 
         def on_train_epoch_end(self):
             avg_train_loss = torch.stack(self.train_step_outputs).mean()
+            print(f'[LOSS] TRAIN: {avg_train_loss}')
             tensorboard_logs = {"avg_train_loss": avg_train_loss}
             return {"avg_train_loss": avg_train_loss, "log": tensorboard_logs, 'progress_bar': tensorboard_logs}
 
@@ -142,6 +144,7 @@ if __name__ == '__main__':
 
         def on_validation_epoch_end(self):
             avg_loss = torch.stack(self.validation_step_outputs).mean()
+            print(f'[LOSS] VALIDATION: {avg_loss}')
             tensorboard_logs = {"val_loss": avg_loss}
             return {"avg_val_loss": avg_loss, "log": tensorboard_logs, 'progress_bar': tensorboard_logs}
 
@@ -240,8 +243,11 @@ if __name__ == '__main__':
             outputs.extend(dec)
             targets.extend(target)
 
-        '''
+        
         print("\nPrint some results to check the sanity of generation method:", '\n', '-'*30)
+        print('target length:', len(targets))
+        print('output length:', len(outputs))
+        
         for i in [1, 5, 25, 42, 50]:
             try:
                 print(f'>>Target    : {targets[i]}')
@@ -249,10 +255,10 @@ if __name__ == '__main__':
             except UnicodeEncodeError:
                 print('Unable to print due to the coding error')
         print()
-        '''
 
         scores, all_labels, all_preds = compute_scores(outputs, targets, sents)
         results = {'scores': scores, 'labels': all_labels, 'preds': all_preds}
+        pd.DataFrame({'labels': all_labels, 'preds': all_preds}).to_csv('outputs/rest16_rlacos.csv')
         # pickle.dump(results, open(f"{args.output_dir}/results-{args.dataset}.pickle", 'wb'))
 
         return scores
@@ -334,7 +340,7 @@ if __name__ == '__main__':
         local_time = time.asctime(time.localtime(time.time()))
 
         exp_settings = f"Datset={args.dataset}; Train bs={args.train_batch_size}, num_epochs = {args.num_train_epochs}"
-        exp_results = f"F1 = {scores['f1']:.4f}"
+        exp_results = f"Precision = {scores['precision']:.4f}, Recall = {scores['recall']:.4f} F1 = {scores['f1']:.4f}"
 
         log_str = f'============================================================\n'
         log_str += f"{local_time}\n{exp_settings}\n{exp_results}\n\n"

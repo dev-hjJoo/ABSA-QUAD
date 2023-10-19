@@ -104,7 +104,7 @@ def get_para_asqp_targets(sents, labels):
 
             man_ot = sentword2opinion[sp]  # 'POS' -> 'good'    
 
-            if at == 'NULL':  # for implicit aspect term
+            if at == 'NULL' or at == '':  # for implicit aspect term
                 at = 'it'
 
             one_quad_sentence = f"{ac} is {man_ot} because {at} is {ot}"
@@ -165,7 +165,7 @@ def get_transformed_io(data_dir, data_type):
     The main function to transform input & target according to the task
     """
 
-    if data_dir == 'rest16_acos':
+    if data_dir == 'rest16_acos' or data_dir == 'rest16-lacos' or data_dir == 'rest16-rlacos':
         data_path = f'data/{data_dir}/{data_type}.tsv'
         sents, labels = get_acos_io(data_type, data_path)
         labels = make_silver_labels(data_type, sents, labels)

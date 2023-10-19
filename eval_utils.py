@@ -3,6 +3,7 @@
 # This script handles the decoding functions and performance measurement
 
 import re
+import pandas as pd
 from data_utils import aspect_cate_list
 
 sentiment_word_list = ['positive', 'negative', 'neutral']
@@ -54,7 +55,7 @@ def extract_spans_para(task, seq, seq_type):
             try:
                 ac_sp, at_ot = s.split(' because ')
                 ac, sp = ac_sp.split(' is ')
-                at, ot = at_ot.split(' is ')
+                at, ot = at_ot.split(' is')
 
                 # if the aspect term is implicit
                 if at.lower() == 'it':
@@ -68,7 +69,7 @@ def extract_spans_para(task, seq, seq_type):
                     pass
                 ac, at, sp, ot = '', '', '', ''
 
-            quads.append((ac, at, sp, ot))
+            quads.append((ac, at, sp, ot.strip()))
     else:
         raise NotImplementedError
     return quads
