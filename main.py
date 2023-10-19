@@ -19,7 +19,7 @@ from transformers import get_linear_schedule_with_warmup
 from multiprocessing import freeze_support
 
 from data_utils import ABSADataset
-from data_utils import read_line_examples_from_file
+from data_utils import read_line_examples_from_file, get_acos_io
 from eval_utils import compute_scores
 
 
@@ -315,7 +315,10 @@ if __name__ == '__main__':
         # print("Reload the model")
         # model.model.from_pretrained(args.output_dir)
 
-        sents, _ = read_line_examples_from_file(f'data/{args.dataset}/test.txt')
+        # sents, _ = read_line_examples_from_file(f'data/{args.dataset}/test.txt')
+        data_type = 'test'
+        data_path = f'data/{args.dataset}/{data_type}.tsv'
+        sents, _ = get_acos_io(data_type, data_path)
 
         print()
         test_dataset = ABSADataset(tokenizer, data_dir=args.dataset, 

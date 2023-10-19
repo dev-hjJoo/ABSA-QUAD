@@ -3,6 +3,7 @@
 # This script contains all data transformation and reading
 
 import random
+import pandas as pd
 from torch.utils.data import Dataset
 
 senttag2word = {'POS': 'positive', 'NEG': 'negative', 'NEU': 'neutral'}
@@ -114,11 +115,63 @@ def get_para_asqp_targets(sents, labels):
     return targets
 
 
-def get_transformed_io(data_path, data_dir):
+# Data Load & Preprocessing for ACOS Dataset
+def get_acos_io(data_type, data_path):
+    cnt_quads = 0
+    inputs = []
+    outputs = []
+    with open(data_path, 'r', encoding='UTF-8') as fp:
+        for line in fp:
+            inputs.append(line.strip().split('\t')[0].split())
+            outputs.append(line.strip().split('\t')[1:])
+            cnt_quads += len(line.strip().split('\t')[1:])
+
+    print(f'Outputs: {data_type}의 총 quad 개수: {cnt_quads}')
+    return inputs, outputs
+
+def make_silver_labels(data_type, inputs, outputs):
+    sentiments = ['negative', 'neutral', 'positive']
+    silver_quads_list = []
+    cnt_quads =  0
+
+    for i, quads in enumerate(outputs):
+        silver_quads = []
+        for quad in quads:
+            at, cg, sm, ot = quad.split()
+
+            # aspect term
+            at_st, at_en = at.split(',')
+            at = ' '.join(inputs[i][int(at_st):int(at_en)])
+            # category
+            cg = ' '.join(cg.split('#')).lower()
+            # sentiment
+            sm = sentiments[int(sm)]
+            # opinion term
+            ot_st, ot_en = ot.split(',')
+            ot = ' '.join(inputs[i][int(ot_st):int(ot_en)])
+
+            silver_quads.append([at, cg, sm, ot])
+            cnt_quads += 1
+        silver_quads_list.append(silver_quads)
+
+    print(f'Silver: {data_type}의 총 quad 개수: {cnt_quads}')
+    
+    return silver_quads_list
+
+
+
+def get_transformed_io(data_dir, data_type):
     """
     The main function to transform input & target according to the task
     """
-    sents, labels = read_line_examples_from_file(data_path)
+
+    if data_dir == 'rest16_acos':
+        data_path = f'data/{data_dir}/{data_type}.tsv'
+        sents, labels = get_acos_io(data_type, data_path)
+        labels = make_silver_labels(data_type, sents, labels)
+    else:
+        data_path = f'data/{data_dir}/{data_type}.txt'
+        sents, labels = read_line_examples_from_file(data_path)
 
     # the input is just the raw sentence
     inputs = [s.copy() for s in sents]
@@ -128,7 +181,7 @@ def get_transformed_io(data_path, data_dir):
         targets = get_para_aste_targets(sents, labels)
     elif task == 'tasd':
         targets = get_para_tasd_targets(sents, labels)
-    elif task == 'asqp':
+    elif task == 'asqp' or task == 'acos_asqp':
         targets = get_para_asqp_targets(sents, labels)
     else:
         raise NotImplementedError
@@ -136,13 +189,17 @@ def get_transformed_io(data_path, data_dir):
     return inputs, targets
 
 
+
+
 class ABSADataset(Dataset):
     def __init__(self, tokenizer, data_dir, data_type, max_len=128):
         # './data/rest16/train.txt'
-        self.data_path = f'data/{data_dir}/{data_type}.txt'
+        # self.data_path = f'data/{data_dir}/{data_type}.txt'
+        
         self.max_len = max_len
         self.tokenizer = tokenizer
         self.data_dir = data_dir
+        self.data_type = data_type
 
         self.inputs = []
         self.targets = []
@@ -164,7 +221,7 @@ class ABSADataset(Dataset):
 
     def _build_examples(self):
 
-        inputs, targets = get_transformed_io(self.data_path, self.data_dir)
+        inputs, targets = get_transformed_io(self.data_dir, self.data_type)        
 
         for i in range(len(inputs)):
             # change input and target to two strings
